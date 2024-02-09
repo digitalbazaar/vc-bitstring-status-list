@@ -23,6 +23,7 @@ import {defaultDocumentLoader} from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import jsigs from 'jsonld-signatures';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
+import { createVC } from '../issue.js';
 
 const {extendContextLoader} = jsigs;
 
@@ -261,7 +262,7 @@ describe('statusTypeMatches', () => {
     err.message.should.contain('"credentialStatus" is invalid');
   });
 
-  it('should not match when "CONTEXTS.VC_BRL_V1" is not in ' +
+  it('should not match when "CONTEXTS.VC_BSL_V1" is not in ' +
     '"@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
@@ -458,10 +459,12 @@ describe('checkStatus', () => {
       },
       issuer: invalidSLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential,
+      suite,
       documentLoader,
-      verifyStatusListCredential: false
+      verifyBitstringStatusListCredential: false
     });
     should.not.exist(result.error);
     result.verified.should.equal(true);
@@ -812,8 +815,10 @@ describe('checkStatus', () => {
       },
       issuer: SLCRevocation.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential, documentLoader, suite,
+      verifyBitstringStatusListCredential: false
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -850,8 +855,9 @@ describe('checkStatus', () => {
       },
       issuer: SLCRevocation.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential, documentLoader, suite, verifyStatusListCredential: false
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -888,8 +894,9 @@ describe('checkStatus', () => {
       },
       issuer: SLCRevocation.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential, documentLoader, suite, verifyStatusListCredential: false
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -1183,7 +1190,7 @@ describe('assertBitstringStatusListContext', () => {
     err.message.should.contain('first "@context" value');
   });
 
-  it('should fail when "CONTEXTS.VC_BRL_V1" is not in "@context"', async () => {
+  it('should fail when "CONTEXTS.VC_BSL_V1" is not in "@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(

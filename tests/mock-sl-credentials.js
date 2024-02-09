@@ -19,9 +19,9 @@ export const slCredentialRevocation = {
     SUITE_CONTEXT_URL
   ],
   id: 'https://example.com/status/1',
-  issuer: 'did:key:z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oSzGX1',
+  issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
   issuanceDate: '2022-06-02T16:00:21Z',
-  type: ['VerifiableCredential', 'BitstringStatusListCredential'],
+  type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
   credentialSubject: {
     id: 'https://example.com/status/1#list',
     type: 'BitstringStatusList',
@@ -30,12 +30,12 @@ export const slCredentialRevocation = {
   },
   proof: {
     type: 'Ed25519Signature2020',
-    created: '2022-06-02T16:00:21Z',
-    verificationMethod: 'did:key:z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oS' +
-      'zGX1#z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oSzGX1',
+    created: '2024-02-09T06:43:18Z',
+    verificationMethod: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5U' +
+      'jBop#z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
     proofPurpose: 'assertionMethod',
-    proofValue: 'z23V1M4NHs6MZP2T2ANyFHbvyxg9VaEgK58CXqXBnugPUR1sXc7rxuw6h4bK' +
-      'cjDD24WRa7PSiAidtFWDa7UskBQxS'
+    proofValue: 'z5R731MjeqiZdMrbUCTu9eKMZ1MQbdzVBH6h3poSK6v2m5qGWQsTym3FFHuy' +
+      '13PGqnJpRiARZ9jkXSi7CMxkySo3E'
   }
 };
 
@@ -46,9 +46,9 @@ export const slCredentialSuspension = {
     SUITE_CONTEXT_URL
   ],
   id: 'https://example.com/status/2',
-  issuer: 'did:key:z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oSzGX1',
+  issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
   issuanceDate: '2022-06-02T16:06:22Z',
-  type: ['VerifiableCredential', 'BitstringStatusListCredential'],
+  type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
   credentialSubject: {
     id: 'https://example.com/status/2#list',
     type: 'BitstringStatusList',
@@ -57,11 +57,11 @@ export const slCredentialSuspension = {
   },
   proof: {
     type: 'Ed25519Signature2020',
-    created: '2022-06-02T16:06:22Z',
-    verificationMethod: 'did:key:z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oS' +
-      'zGX1#z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oSzGX1',
+    created: '2024-02-09T06:43:18Z',
+    verificationMethod: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5' +
+      'UjBop#z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
     proofPurpose: 'assertionMethod',
-    proofValue: 'z5T6qqcpmoMGNh8ufZCo5fgPvU94BCFaqii2QCyHTXi51Mypw2QJusKuWuJ' +
-      '7HbC7wKgzYQUQbFgJYBh7DcZkX2dCM'
+    proofValue: 'z5DvJ59aVSb3QkhWvhVWXcjfhk4CLhDfvcusMDaLky7dmSJNEbf3WLxXPzP' +
+      'wcMFVZ2StM1xrPc99ashXFeWhhh7Co'
   }
 };
