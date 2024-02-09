@@ -19,9 +19,10 @@
   },
   "dependencies": {
     "@digitalbazaar/bitstring": "^3.0.0",
+    "@digitalbazaar/credentials-v2-context": "github:digitalbazaar/credentials-v2-context#main",
+    "@digitalbazaar/ed25519-verification-key-2020": "^4.1.0",
     "@digitalbazaar/vc": "^5.0.0",
     "@digitalbazaar/vc-bitstring-status-list-context": "github:digitalbazaar/vc-bitstring-status-list-context#initial",
-    "@digitalbazaar/credentials-v2-context": "github:digitalbazaar/credentials-v2-context#main",
     "credentials-context": "^2.0.0"
   },
   "devDependencies": {
