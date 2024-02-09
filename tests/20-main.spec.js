@@ -23,7 +23,6 @@ import {defaultDocumentLoader} from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import jsigs from 'jsonld-signatures';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
-import { createVC } from '../issue.js';
 
 const {extendContextLoader} = jsigs;
 
@@ -828,10 +827,34 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject" type is not ' +
     '"BitstringStatusList"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
-    // intentionally set credential subject type to an invalid type
-    invalidSLC.credentialSubject.type = 'InvalidType';
-    invalidSLC.id = 'https://example.com/status/invalid-sl-type';
+    const invalidSLC = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://www.w3.org/ns/credentials/status/v1',
+        'https://w3id.org/security/suites/ed25519-2020/v1',
+        {'@vocab': 'https://invalid'}
+      ],
+      id: 'https://example.com/status/1',
+      issuer: 'did:key:z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3cQR5Nfu4an',
+      issuanceDate: '2022-06-02T16:00:21Z',
+      type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
+      credentialSubject: {
+        id: 'https://example.com/status/1#list',
+        type: 'InvalidType',
+        encodedList: 'H4sIAAAAAAAAA-3OMQ0AAAgDsOHfNB72EJJWQRMAAAAAAIDWXAcAAAA' +
+          'AAIDHFrc4zDzUMAAA',
+        statusPurpose: 'revocation'
+      },
+      proof: {
+        type: 'Ed25519Signature2020',
+        created: '2024-02-09T20:07:29Z',
+        verificationMethod: 'did:key:z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3c' +
+          'QR5Nfu4an#z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3cQR5Nfu4an',
+        proofPurpose: 'assertionMethod',
+        proofValue: 'z21FCoyGBuS3PA961EAiExh4DFp7zjAtimCgowdocER6CzuJCyhxsdK' +
+          'AeCJRv9ABfeRxQg5GJdTvgtWa3eW9xJKai'
+      }
+    };
 
     documents.set(invalidSLC.id, invalidSLC);
 
@@ -853,7 +876,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: invalidSLC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -867,10 +890,32 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject.encodedList" ' +
     'cannot not be decoded', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
-    // intentionally set encodedList to an invalid value
-    invalidSLC.credentialSubject.encodedList = 'INVALID-XYZ';
-    invalidSLC.id = 'https://example.com/status/invalid-encoded-list';
+    const invalidSLC = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://www.w3.org/ns/credentials/status/v1',
+        'https://w3id.org/security/suites/ed25519-2020/v1'
+      ],
+      id: 'https://example.com/status/1',
+      issuer: 'did:key:z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fTgfTtVvSE',
+      issuanceDate: '2022-06-02T16:00:21Z',
+      type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
+      credentialSubject: {
+        id: 'https://example.com/status/1#list',
+        type: 'BitstringStatusList',
+        encodedList: 'Invalid-XYZ',
+        statusPurpose: 'revocation'
+      },
+      proof: {
+        type: 'Ed25519Signature2020',
+        created: '2024-02-09T19:55:53Z',
+        verificationMethod: 'did:key:z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fT' +
+          'gfTtVvSE#z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fTgfTtVvSE',
+        proofPurpose: 'assertionMethod',
+        proofValue: 'z32AG82ncrFxcRGw3H7WTTVtLPWEyW95zoxMNcHxTKbeNphFScZXJFAz' +
+          'b7qw3CdoGMWFCqKexGvQXiHoAkHdBpyPt'
+      }
+    };
 
     documents.set(invalidSLC.id, invalidSLC);
 
@@ -892,7 +937,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: invalidSLC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -1120,6 +1165,8 @@ describe('checkStatus', () => {
       // by `SLC.id` above
       issuer: 'did:example:1234',
     };
+    documents.set(SLCRevocation.id, SLCRevocation);
+
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential,
