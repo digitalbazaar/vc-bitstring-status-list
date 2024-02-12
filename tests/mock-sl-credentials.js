@@ -21,7 +21,7 @@ export const slCredentialRevocation = {
   id: 'https://example.com/status/1',
   issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
   issuanceDate: '2022-06-02T16:00:21Z',
-  type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
+  type: ['VerifiableCredential', 'BitstringStatusListCredential'],
   credentialSubject: {
     id: 'https://example.com/status/1#list',
     type: 'BitstringStatusList',
@@ -48,7 +48,7 @@ export const slCredentialSuspension = {
   id: 'https://example.com/status/2',
   issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
   issuanceDate: '2022-06-02T16:06:22Z',
-  type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
+  type: ['VerifiableCredential', 'BitstringStatusListCredential'],
   credentialSubject: {
     id: 'https://example.com/status/2#list',
     type: 'BitstringStatusList',
