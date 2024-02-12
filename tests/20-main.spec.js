@@ -261,8 +261,8 @@ describe('statusTypeMatches', () => {
     err.message.should.contain('"credentialStatus" is invalid');
   });
 
-  it('should not match when "CONTEXTS.VC_BSL_V1" is not in ' +
-    '"@context"', async () => {
+  it('should not match when "CONTEXTS.VC_BSL_V1" or "CONTEXTS.VC_2" are not ' +
+    'in "@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(
@@ -1237,7 +1237,8 @@ describe('assertBitstringStatusListContext', () => {
     err.message.should.contain('first "@context" value');
   });
 
-  it('should fail when "CONTEXTS.VC_BSL_V1" is not in "@context"', async () => {
+  it('should fail when "CONTEXTS.VC_BSL_V1" or "CONTEXTS.VC_V2" are not in ' +
+    '"@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(
