@@ -11,16 +11,17 @@ import {
   getCredentialStatus,
   statusTypeMatches
 } from '../lib/index.js';
-import {
-  slCredentialRevocation as SLCRevocation,
-  slCredentialSuspension as SLCSuspension
-} from './mock-sl-credentials.js';
+import {defaultDocumentLoader, issue} from '@digitalbazaar/vc';
 import {
   CONTEXT as VC_BSL_V1_CONTEXT,
   CONTEXT_URL as VC_BSL_V1_CONTEXT_URL
 } from '@digitalbazaar/vc-bitstring-status-list-context';
-import {defaultDocumentLoader} from '@digitalbazaar/vc';
+import {
+  createMockBitstringStatusListCredential
+} from './mock-sl-credentials.js';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import {Ed25519VerificationKey2020} from
+  '@digitalbazaar/ed25519-verification-key-2020';
 import jsigs from 'jsonld-signatures';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
 
@@ -30,13 +31,13 @@ const SUITE_CONTEXT_URL = suiteCtx2020.constants.CONTEXT_URL;
 const SUITE_CONTEXT = suiteCtx2020.contexts.get(SUITE_CONTEXT_URL);
 
 const encodedList100k =
-  'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
+  'uH4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
 
 const documents = new Map();
 documents.set(VC_BSL_V1_CONTEXT_URL, VC_BSL_V1_CONTEXT);
 documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
-documents.set(SLCRevocation.id, SLCRevocation);
-documents.set(SLCSuspension.id, SLCSuspension);
+// documents.set(SLCRevocation.id, SLCRevocation);
+// documents.set(SLCSuspension.id, SLCSuspension);
 
 const didKeyDriver = didKey.driver();
 
@@ -136,9 +137,9 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#67342',
         type: 'BitstringStatusListEntry',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: 'https://example.com/status/1'
       },
-      issuer: SLCRevocation.issuer,
+      issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop'
     };
     const result = statusTypeMatches({credential});
     result.should.equal(true);
@@ -160,9 +161,9 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NotMatch',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: 'https://example.com/status/1'
       },
-      issuer: SLCRevocation.issuer,
+      issuer: 'did:key:z6MkowtnRyMkCerXvXqjCYUo2mLEeCgX1sWfoP2CZA5UjBop',
     };
     const result = statusTypeMatches({credential});
     result.should.equal(false);
@@ -275,7 +276,7 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#50000',
         type: 'BitstringStatusListEntry',
         statusListIndex: '50000',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: 'https://example.com/status/1'
       };
       result = statusTypeMatches({credential});
     } catch(e) {
@@ -288,6 +289,10 @@ describe('statusTypeMatches', () => {
 
 describe('checkStatus', () => {
   it('should verify a valid status list vc', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -304,9 +309,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -325,6 +330,10 @@ describe('checkStatus', () => {
 
   it('should use default value when "verifyStatusListCredential" is not ' +
     'specified', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set('https://example.com/status/1', statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -341,9 +350,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -356,10 +365,12 @@ describe('checkStatus', () => {
   });
 
   it('should fail to verify an invalid status list vc', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
-    delete invalidSLC.proof;
-    invalidSLC.id = 'https://example.com/status/no-proof-SLCRevocation';
-    documents.set(invalidSLC.id, invalidSLC);
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    delete statusVC.proof;
+    statusVC.id = 'https://example.com/status/no-proof-BSLCRevocation';
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -376,9 +387,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: invalidSLC.id
+        statusListCredential: statusVC.id
       },
-      issuer: invalidSLC.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -395,11 +406,12 @@ describe('checkStatus', () => {
 
   it('should fail to verify status list vc that has been tampered with',
     async () => {
-      const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
-      // intentionally change it's type
-      invalidSLC.type = ['VerifiableCredential', 'ex:Invalid'];
-      invalidSLC.id = 'https://example.com/status/tampered-SLCRevocation';
-      documents.set(invalidSLC.id, invalidSLC);
+      const statusVC = await createMockBitstringStatusListCredential({
+        statusPurpose: 'revocation', documentLoader
+      });
+      statusVC.type = ['VerifiableCredential', 'ex:Invalid'];
+      statusVC.id = 'https://example.com/status/tampered-SLCRevocation';
+      documents.set(statusVC.id, statusVC);
       const credential = {
         '@context': [
           'https://www.w3.org/2018/credentials/v1',
@@ -416,9 +428,9 @@ describe('checkStatus', () => {
           type: 'BitstringStatusListEntry',
           statusPurpose: 'revocation',
           statusListIndex: '67342',
-          statusListCredential: invalidSLC.id
+          statusListCredential: statusVC.id
         },
-        issuer: invalidSLC.issuer,
+        issuer: statusVC.issuer,
       };
       const suite = new Ed25519Signature2020();
       const result = await checkStatus({
@@ -434,10 +446,12 @@ describe('checkStatus', () => {
 
   it('should verify with an invalid status list vc when ' +
     '"verifyStatusListCredential" is set to "false"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
-    delete invalidSLC.proof;
-    invalidSLC.id = 'https://example.com/status/no-proof-invalid-SLCRevocation';
-    documents.set(invalidSLC.id, invalidSLC);
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    delete statusVC.proof;
+    statusVC.id = 'https://example.com/status/no-proof-invalid-SLCRevocation';
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -454,9 +468,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: invalidSLC.id
+        statusListCredential: statusVC.id
       },
-      issuer: invalidSLC.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -470,6 +484,10 @@ describe('checkStatus', () => {
   });
 
   it('should verify one status of a credential', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -486,9 +504,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -503,6 +521,10 @@ describe('checkStatus', () => {
 
   it('should fail to verify if status purpose in credential does not match ' +
     'the status purpose of status list credential', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -521,9 +543,9 @@ describe('checkStatus', () => {
         statusListIndex: '67342',
         // intentionally point the statusListCredential to the
         // status list credential with status purpose "revocation".
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -540,6 +562,20 @@ describe('checkStatus', () => {
   });
 
   it('should verify multiple statuses of a credential', async () => {
+    const keyPair = await Ed25519VerificationKey2020.generate();
+    const {publicKeyMultibase} = keyPair;
+    keyPair.id = `did:key:${publicKeyMultibase}#${publicKeyMultibase}`;
+    keyPair.controller = `did:key:${publicKeyMultibase}`;
+    const suite = new Ed25519Signature2020({key: keyPair});
+    const statusVCRevocation = await createMockBitstringStatusListCredential({
+      suite, statusPurpose: 'revocation', documentLoader
+    });
+    const statusVCSuspension = await createMockBitstringStatusListCredential({
+      suite, id: 'https://example.com/status/2', statusPurpose: 'suspension',
+      documentLoader
+    });
+    documents.set(statusVCRevocation.id, statusVCRevocation);
+    documents.set(statusVCSuspension.id, statusVCSuspension);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -556,17 +592,16 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVCRevocation.id
       }, {
         id: 'https://example.com/status/2#67343',
         type: 'BitstringStatusListEntry',
         statusPurpose: 'suspension',
         statusListIndex: '67343',
-        statusListCredential: SLCSuspension.id
+        statusListCredential: statusVCSuspension.id
       }],
-      issuer: SLCRevocation.issuer,
+      issuer: statusVCRevocation.issuer,
     };
-    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential,
       suite,
@@ -578,6 +613,10 @@ describe('checkStatus', () => {
   });
 
   it('should fail with incorrect status type', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -593,9 +632,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -611,6 +650,20 @@ describe('checkStatus', () => {
   });
 
   it('should pass when there is >= 1 matching type', async () => {
+    const keyPair = await Ed25519VerificationKey2020.generate();
+    const {publicKeyMultibase} = keyPair;
+    keyPair.id = `did:key:${publicKeyMultibase}#${publicKeyMultibase}`;
+    keyPair.controller = `did:key:${publicKeyMultibase}`;
+    const suite = new Ed25519Signature2020({key: keyPair});
+    const statusVCRevocation = await createMockBitstringStatusListCredential({
+      suite, statusPurpose: 'revocation', documentLoader
+    });
+    const statusVCRevocation2 = await createMockBitstringStatusListCredential({
+      suite, id: 'https://example.com/status/2', statusPurpose: 'revocation',
+      documentLoader
+    });
+    documents.set(statusVCRevocation.id, statusVCRevocation);
+    documents.set(statusVCRevocation2.id, statusVCRevocation2);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -627,17 +680,16 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVCRevocation.id
       }, {
-        id: 'https://example.com/status/1#67342',
+        id: 'https://example.com/status/2#67342',
         type: 'ex:NonmatchingStatusType',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVCRevocation2.id
       }],
-      issuer: SLCRevocation.issuer,
+      issuer: statusVCRevocation.issuer,
     };
-    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential,
       suite,
@@ -649,6 +701,10 @@ describe('checkStatus', () => {
   });
 
   it('should fail when missing index', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -664,9 +720,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#67342',
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -681,6 +737,10 @@ describe('checkStatus', () => {
   });
 
   it('should fail when missing "statusListCredential"', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'suspension', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -698,7 +758,7 @@ describe('checkStatus', () => {
         statusPurpose: 'suspension',
         statusListIndex: '67342'
       },
-      issuer: SLCSuspension.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -714,6 +774,10 @@ describe('checkStatus', () => {
   });
 
   it('should fail when missing "statusPurpose"', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -729,9 +793,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#50000',
         type: 'BitstringStatusListEntry',
         statusListIndex: '50000',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -748,6 +812,9 @@ describe('checkStatus', () => {
 
   it('should fail when documentLoader cannot load ' +
     '"statusListCredential"', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -768,7 +835,7 @@ describe('checkStatus', () => {
         // in documents
         statusListCredential: 'https://example.com/status/3'
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -787,12 +854,14 @@ describe('checkStatus', () => {
 
   it('should fail when "statusListCredential" type does not ' +
     'include "BitstringStatusListCredential"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     // intentionally set SLCRevocation type to an invalid type
-    invalidSLC.type = ['InvalidType'];
-    invalidSLC.id = 'https://example.com/status/invalid-SLCRevocation-type';
-
-    documents.set(invalidSLC.id, invalidSLC);
+    statusVC.type = ['InvalidType'];
+    statusVC.id = 'https://example.com/status/invalid-SLCRevocation-type';
+    documents.set(statusVC.id, statusVC);
 
     const credential = {
       '@context': [
@@ -810,9 +879,9 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '50000',
-        statusListCredential: invalidSLC.id
+        statusListCredential: statusVC.id
       },
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -827,36 +896,18 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject" type is not ' +
     '"BitstringStatusList"', async () => {
-    const invalidSLC = {
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        'https://www.w3.org/ns/credentials/status/v1',
-        'https://w3id.org/security/suites/ed25519-2020/v1',
-        {'@vocab': 'https://invalid'}
-      ],
-      id: 'https://example.com/status/1',
-      issuer: 'did:key:z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3cQR5Nfu4an',
-      issuanceDate: '2022-06-02T16:00:21Z',
-      type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
-      credentialSubject: {
-        id: 'https://example.com/status/1#list',
-        type: 'InvalidType',
-        encodedList: 'H4sIAAAAAAAAA-3OMQ0AAAgDsOHfNB72EJJWQRMAAAAAAIDWXAcAAAA' +
-          'AAIDHFrc4zDzUMAAA',
-        statusPurpose: 'revocation'
-      },
-      proof: {
-        type: 'Ed25519Signature2020',
-        created: '2024-02-09T20:07:29Z',
-        verificationMethod: 'did:key:z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3c' +
-          'QR5Nfu4an#z6MksyNRT8R43D9uTjZUBUL6bkypRMJFdUhJw3cQR5Nfu4an',
-        proofPurpose: 'assertionMethod',
-        proofValue: 'z21FCoyGBuS3PA961EAiExh4DFp7zjAtimCgowdocER6CzuJCyhxsdK' +
-          'AeCJRv9ABfeRxQg5GJdTvgtWa3eW9xJKai'
-      }
-    };
-
-    documents.set(invalidSLC.id, invalidSLC);
+    const keyPair = await Ed25519VerificationKey2020.generate();
+    const {publicKeyMultibase} = keyPair;
+    keyPair.id = `did:key:${publicKeyMultibase}#${publicKeyMultibase}`;
+    keyPair.controller = `did:key:${publicKeyMultibase}`;
+    const suite = new Ed25519Signature2020({key: keyPair});
+    let statusVC = await createMockBitstringStatusListCredential({
+      suite, statusPurpose: 'revocation', documentLoader
+    });
+    delete statusVC.proof;
+    statusVC.credentialSubject.type = ['ex:InvalidType'];
+    statusVC = await issue({credential: statusVC, suite, documentLoader});
+    documents.set(statusVC.id, statusVC);
 
     const credential = {
       '@context': [
@@ -874,11 +925,10 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '50000',
-        statusListCredential: invalidSLC.id
+        statusListCredential: statusVC.id
       },
-      issuer: invalidSLC.issuer,
+      issuer: statusVC.issuer,
     };
-    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential, documentLoader, suite, verifyStatusListCredential: false
     });
@@ -890,34 +940,18 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject.encodedList" ' +
     'cannot not be decoded', async () => {
-    const invalidSLC = {
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        'https://www.w3.org/ns/credentials/status/v1',
-        'https://w3id.org/security/suites/ed25519-2020/v1'
-      ],
-      id: 'https://example.com/status/1',
-      issuer: 'did:key:z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fTgfTtVvSE',
-      issuanceDate: '2022-06-02T16:00:21Z',
-      type: [ 'VerifiableCredential', 'BitstringStatusListCredential' ],
-      credentialSubject: {
-        id: 'https://example.com/status/1#list',
-        type: 'BitstringStatusList',
-        encodedList: 'Invalid-XYZ',
-        statusPurpose: 'revocation'
-      },
-      proof: {
-        type: 'Ed25519Signature2020',
-        created: '2024-02-09T19:55:53Z',
-        verificationMethod: 'did:key:z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fT' +
-          'gfTtVvSE#z6MkhepELN9L2iLwoGTzAEx5M9vA38y7AbnXk9fTgfTtVvSE',
-        proofPurpose: 'assertionMethod',
-        proofValue: 'z32AG82ncrFxcRGw3H7WTTVtLPWEyW95zoxMNcHxTKbeNphFScZXJFAz' +
-          'b7qw3CdoGMWFCqKexGvQXiHoAkHdBpyPt'
-      }
-    };
-
-    documents.set(invalidSLC.id, invalidSLC);
+    const keyPair = await Ed25519VerificationKey2020.generate();
+    const {publicKeyMultibase} = keyPair;
+    keyPair.id = `did:key:${publicKeyMultibase}#${publicKeyMultibase}`;
+    keyPair.controller = `did:key:${publicKeyMultibase}`;
+    const suite = new Ed25519Signature2020({key: keyPair});
+    let statusVC = await createMockBitstringStatusListCredential({
+      suite, statusPurpose: 'revocation', documentLoader
+    });
+    delete statusVC.proof;
+    statusVC.credentialSubject.encodedList = 'uBAAAAAADLIST';
+    statusVC = await issue({credential: statusVC, suite, documentLoader});
+    documents.set(statusVC.id, statusVC);
 
     const credential = {
       '@context': [
@@ -935,11 +969,10 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '50000',
-        statusListCredential: invalidSLC.id
+        statusListCredential: statusVC.id
       },
-      issuer: invalidSLC.issuer,
+      issuer: statusVC.issuer,
     };
-    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential, documentLoader, suite, verifyStatusListCredential: false
     });
@@ -967,6 +1000,10 @@ describe('checkStatus', () => {
   });
 
   it('should fail when documentLoader is not a function', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -981,15 +1018,15 @@ describe('checkStatus', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'BitstringStatusListEntry',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       }
     };
-    const documentLoader = 'https://example.com/status/1';
+    const documentLoader2 = 'https://example.com/status/1';
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       suite,
       credential,
-      documentLoader,
+      documentLoader: documentLoader2,
       verifyStatusListCredential: true
     });
 
@@ -1006,6 +1043,10 @@ describe('checkStatus', () => {
 
   it('should fail when suite is not an object or array of ' +
     'objects', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -1021,20 +1062,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#50000',
         type: 'BitstringStatusListEntry',
         statusListIndex: '50000',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       }
     };
-    const documentLoader = extendContextLoader(async url => {
-      const doc = documents.get(url);
-      if(doc) {
-        return {
-          contextUrl: null,
-          documentUrl: url,
-          document: doc
-        };
-      }
-      return defaultDocumentLoader(url);
-    });
     const suite = '{}';
     let err;
     let result;
@@ -1059,13 +1089,17 @@ describe('checkStatus', () => {
 
   it('should fail when "BitstringStatusListCredential" is not ' +
     'verified', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
         VC_BSL_V1_CONTEXT_URL
       ],
       id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
-      issuer: SLCRevocation.issuer,
+      issuer: statusVC.issuer,
       issuanceDate: '2021-03-10T04:24:12.164Z',
       type: ['VerifiableCredential', 'example:TestCredential'],
       credentialSubject: {
@@ -1077,7 +1111,7 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: 50000,
-        statusListCredential: SLCRevocation.id
+        statusListCredential: statusVC.id
       }
     };
     let err;
@@ -1121,7 +1155,7 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id,
+        statusListCredential: 'https://example.com/status/1',
       },
       // this issuer does not match the issuer for the mock SLC specified
       // by `SLC.id` above
@@ -1143,6 +1177,10 @@ describe('checkStatus', () => {
 
   it('should allow different issuers when "verifyMatchingIssuers" is ' +
     'false', async () => {
+    const statusVC = await createMockBitstringStatusListCredential({
+      statusPurpose: 'revocation', documentLoader
+    });
+    documents.set(statusVC.id, statusVC);
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -1159,13 +1197,12 @@ describe('checkStatus', () => {
         type: 'BitstringStatusListEntry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLCRevocation.id,
+        statusListCredential: statusVC.id,
       },
       // this issuer does not match the issuer for the mock SLC specified
       // by `SLC.id` above
       issuer: 'did:example:1234',
     };
-    documents.set(SLCRevocation.id, SLCRevocation);
 
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -1183,6 +1220,23 @@ describe('checkStatus', () => {
 });
 
 describe('assertBitstringStatusListContext', () => {
+  it('should pass when "@context" includes "CONTEXTS.VC_V2"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation', vcdmVersion: 2});
+
+    let err;
+    let result;
+    try {
+      result = assertBitstringStatusListContext({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.not.exist(result);
+  });
+
   it('should fail when "credential" is not an object', async () => {
     let err;
     let result;
@@ -1303,7 +1357,7 @@ describe('getCredentialStatus', () => {
       type: 'InvalidType',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     };
     let err;
     let result;
@@ -1330,14 +1384,14 @@ describe('getCredentialStatus', () => {
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLCSuspension.id
+      statusListCredential: 'https://example.com/status/2'
     },
     {
       id: 'https://example.com/status/1#67342',
       type: 'BitstringStatusListEntry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     }];
     let err;
     let result;
@@ -1382,14 +1436,14 @@ describe('getCredentialStatus', () => {
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'revocation',
       statusListIndex: '12345',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     },
     {
       id: 'https://example.com/status/1#67342',
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLCSuspension.id
+      statusListCredential: 'https://example.com/status/2'
     }];
     let err;
     let result;
@@ -1415,7 +1469,7 @@ describe('getCredentialStatus', () => {
       type: 'BitstringStatusListEntry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     };
     let err;
     let result;
@@ -1439,7 +1493,7 @@ describe('getCredentialStatus', () => {
       type: 'BitstringStatusListEntry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     };
     let err;
     let result;
@@ -1465,7 +1519,7 @@ describe('getCredentialStatus', () => {
       type: 'BitstringStatusListEntry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: 'https://example.com/status/1'
     };
     let err;
     let result;

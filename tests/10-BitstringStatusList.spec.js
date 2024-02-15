@@ -4,9 +4,9 @@
 import {BitstringStatusList} from '../lib/BitstringStatusList.js';
 
 const encodedList100k =
-  'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
+  'uH4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
 const encodedList100KWith50KthRevoked =
-  'H4sIAAAAAAAAA-3OMQ0AAAgDsElHOh72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFvRitn7UMAAA';
+  'uH4sIAAAAAAAAA-3OMQ0AAAgDsElHOh72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFvRitn7UMAAA';
 
 describe('BitstringStatusList', () => {
   it('should create an instance', async () => {
@@ -26,7 +26,7 @@ describe('BitstringStatusList', () => {
       err.name.should.equal('TypeError');
     });
 
-  it('should encode', async () => {
+  it('should encode (multibase formatted)', async () => {
     const list = new BitstringStatusList({length: 100000});
     let encodedList;
     let err;
