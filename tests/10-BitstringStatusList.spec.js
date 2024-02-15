@@ -53,6 +53,23 @@ describe('BitstringStatusList', () => {
     list.length.should.equal(100000);
   });
 
+  it('should fail to decode non-multibase encoded list', async () => {
+    let err;
+    let list;
+    try {
+      list = await BitstringStatusList.decode({
+        encodedList: encodedList100k.slice(1)
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.contain(
+      'Could not decode encoded status list; reason: incorrect header check'
+    );
+    should.not.exist(list);
+  });
+
   it('should mark a credential revoked', async () => {
     const list = new BitstringStatusList({length: 8});
     list.getStatus(0).should.equal(false);
