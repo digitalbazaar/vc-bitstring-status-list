@@ -129,4 +129,16 @@ describe('BitstringStatusList', () => {
     const decodedList = await BitstringStatusList.decode({encodedList});
     decodedList.getStatus(50000).should.equal(true);
   });
+
+  it('should fail when decoding an empty string', async () => {
+    let err;
+    try {
+      await BitstringStatusList.decode({encodedList: ''});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.name.should.equal('TypeError');
+    err.message.should.equal('"buffer" must be a Uint8Array.');
+  });
 });
