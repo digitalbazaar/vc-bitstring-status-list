@@ -97,7 +97,89 @@ describe('decodeList', () => {
 });
 
 describe('createCredential', () => {
-  it('should create a BitstringStatusListCredential credential', async () => {
+  it('should fail when "id" argument missing', async () => {
+    let err;
+    try {
+      await createCredential({
+        list: await createList({length: 8}),
+        statusPurpose: 'revocation'
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.equal('"id" is required.');
+  });
+  it('should fail when "list" argument missing', async () => {
+    let err;
+    try {
+      await createCredential({
+        id: 'https://example.com/1',
+        statusPurpose: 'revocation'
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.equal('"list" is required.');
+  });
+  it('should fail when "list" argument not "BitstringStatusList"', async () => {
+    let err;
+    try {
+      await createCredential({
+        id: 'https://example.com/1',
+        list: encodedList100k,
+        statusPurpose: 'revocation'
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.equal('"list" is required.');
+  });
+  it('should fail when "statusPurpose" argument missing', async () => {
+    let err;
+    try {
+      await createCredential({
+        id: 'https://example.com/1',
+        list: await createList({length: 8})
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.equal('"statusPurpose" is required.');
+  });
+  it('should create a BitstringStatusListCredential credential ' +
+    'with VCDM v1', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential(
+      {
+        id, list, statusPurpose: 'revocation',
+        context: [
+          'https://www.w3.org/2018/credentials/v1',
+          VC_BSL_V1_CONTEXT_URL
+        ]
+      });
+    credential.should.be.an('object');
+    credential.should.deep.equal({
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_BSL_V1_CONTEXT_URL
+      ],
+      id,
+      type: ['VerifiableCredential', 'BitstringStatusListCredential'],
+      credentialSubject: {
+        id: `${id}#list`,
+        type: 'BitstringStatusList',
+        encodedList: encodedList100k,
+        statusPurpose: 'revocation'
+      }
+    });
+  });
+  it('should create a BitstringStatusListCredential credential ' +
+    'with VCDM v2', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(
@@ -105,8 +187,7 @@ describe('createCredential', () => {
     credential.should.be.an('object');
     credential.should.deep.equal({
       '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        VC_BSL_V1_CONTEXT_URL
+        'https://www.w3.org/ns/credentials/v2'
       ],
       id,
       type: ['VerifiableCredential', 'BitstringStatusListCredential'],
@@ -1291,12 +1372,15 @@ describe('assertBitstringStatusListContext', () => {
     err.message.should.contain('first "@context" value');
   });
 
-  it('should fail when "CONTEXTS.VC_BSL_V1" or "CONTEXTS.VC_V2" are not in ' +
+  it('should fail when "CONTEXTS.VC_BSL_V1" not in VCDM v1 credential ' +
     '"@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(
-      {id, list, statusPurpose: 'revocation'});
+      {id, list, statusPurpose: 'revocation', context: [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_BSL_V1_CONTEXT_URL,
+      ]});
     let err;
     let result;
     try {
@@ -1371,6 +1455,58 @@ describe('getCredentialStatus', () => {
     err.should.be.instanceof(Error);
     err.message.should.contain('"credentialStatus" with type ' +
       '"BitstringStatusListEntry" and status purpose "revocation" not found.');
+  });
+
+  it('should fail when "credentialStatus.id" is not a string', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
+    credential.credentialStatus = {
+      id: 6,
+      type: 'BitstringStatusListEntry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: 'https://example.com/status/1'
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus.id" must be a string.');
+  });
+
+  it('should fail when "credentialStatus.id" is the same as ' +
+    '"credentialStatus.statusListCredential"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'BitstringStatusListEntry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: 'https://example.com/status/1#67342'
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus.id" must not be ' +
+      '"credentialStatus.statusListCredential".');
   });
 
   it('should pass when credential has >= 1 credential status ' +
