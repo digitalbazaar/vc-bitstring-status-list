@@ -9,7 +9,8 @@ import {
   createList,
   decodeList,
   getCredentialStatus,
-  statusTypeMatches
+  statusTypeMatches,
+  VC_BSL_VC_V1_CONTEXT
 } from '../lib/index.js';
 import {defaultDocumentLoader, issue} from '@digitalbazaar/vc';
 import {
@@ -204,10 +205,7 @@ describe('createCredential', () => {
 describe('statusTypeMatches', () => {
   it('should find a match', async () => {
     const credential = {
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        VC_BSL_V1_CONTEXT_URL
-      ],
+      '@context': VC_BSL_VC_V1_CONTEXT,
       id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
       type: ['VerifiableCredential', 'example:TestCredential'],
       credentialSubject: {
@@ -228,10 +226,7 @@ describe('statusTypeMatches', () => {
 
   it('should not find a match', async () => {
     const credential = {
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        VC_BSL_V1_CONTEXT_URL
-      ],
+      '@context': VC_BSL_VC_V1_CONTEXT,
       id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
       type: ['VerifiableCredential', 'example:TestCredential'],
       credentialSubject: {
