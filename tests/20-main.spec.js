@@ -1305,7 +1305,7 @@ describe('assertBitstringStatusListContext', () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential(
-      {id, list, statusPurpose: 'revocation', vcdmVersion: 2});
+      {id, list, statusPurpose: 'revocation'});
 
     let err;
     let result;
