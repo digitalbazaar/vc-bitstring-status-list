@@ -64,9 +64,8 @@ describe('BitstringStatusList', () => {
       err = e;
     }
     should.exist(err);
-    err.message.should.contain(
-      'Could not decode encoded status list; reason: incorrect header check'
-    );
+    err.message.should.include(
+      '"encodedList" must start with the character "u".');
     should.not.exist(list);
   });
 
@@ -138,7 +137,7 @@ describe('BitstringStatusList', () => {
       err = e;
     }
     should.exist(err);
-    err.name.should.equal('TypeError');
-    err.message.should.equal('"buffer" must be a Uint8Array.');
+    err.message.should.include(
+      '"encodedList" must start with the character "u".');
   });
 });
