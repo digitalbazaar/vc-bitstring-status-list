@@ -20,7 +20,7 @@
   "dependencies": {
     "@digitalbazaar/bitstring": "^3.0.0",
     "@digitalbazaar/credentials-v2-context": "github:digitalbazaar/credentials-v2-context#main",
-    "@digitalbazaar/vc": "github:digitalbazaar/vc#credentials-v2",
+    "@digitalbazaar/vc": "github:digitalbazaar/vc#vc-2.0-time-props",
     "@digitalbazaar/vc-bitstring-status-list-context": "^1.0.0",
     "credentials-context": "^2.0.0"
   },
