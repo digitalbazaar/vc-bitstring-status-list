@@ -1452,6 +1452,28 @@ describe('getCredentialStatus', () => {
       '"BitstringStatusListEntry" and status purpose "revocation" not found.');
   });
 
+  it('should pass when "credentialStatus.id" is not set', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
+    credential.credentialStatus = {
+      type: 'BitstringStatusListEntry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: 'https://example.com/status/1'
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+  });
+
   it('should fail when "credentialStatus.id" is not a string', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
