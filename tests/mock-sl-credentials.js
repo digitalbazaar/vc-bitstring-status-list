@@ -33,7 +33,7 @@ export async function createMockBitstringStatusListCredential({
     ],
     id,
     issuer: suite.key.controller,
-    issuanceDate: '2022-06-02T16:00:21Z',
+    validFrom: '2022-06-02T16:00:21Z',
     type: ['VerifiableCredential', 'BitstringStatusListCredential'],
     credentialSubject: {
       id: `${id}#list`,
