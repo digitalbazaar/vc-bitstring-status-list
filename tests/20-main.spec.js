@@ -982,6 +982,9 @@ describe('checkStatus', () => {
     });
     delete statusVC.proof;
     statusVC.credentialSubject.type = ['ex:InvalidType'];
+    // terms were type scoped and a vocab is needed to avoid safe mode
+    // violations for this test.
+    statusVC['@context'].push({'@vocab': 'ex:test:'});
     statusVC = await issue({credential: statusVC, suite, documentLoader});
     documents.set(statusVC.id, statusVC);
 
