@@ -1,5 +1,14 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
+## 2.0.0 - 2024-11-dd
+
+### Changed
+- **BREAKING**: The `verified` property returned from `checkStatus` only
+  indicates whether the VC's SLC was property verified, it does not make
+  any statement about the `status` value (true/false/other) expressed in
+  the SLC for the credential status index. Only `status` indicates the
+  value of the status at that index of interest.
+
 ## 1.1.0 - 2024-11-06
 
 ### Added
