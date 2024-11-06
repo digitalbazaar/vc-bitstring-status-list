@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
-## 1.1.0 - 2024-11-dd
+## 1.1.0 - 2024-11-06
 
 ### Added
 - Return `status` value so it can be used instead of `verified` in status
