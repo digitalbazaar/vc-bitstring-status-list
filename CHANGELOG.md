@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
-## 2.0.0 - 2024-11-dd
+## 2.0.0 - 2024-11-06
 
 ### Changed
 - **BREAKING**: The `verified` property returned from `checkStatus` only
