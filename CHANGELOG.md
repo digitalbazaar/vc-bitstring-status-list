@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
-## 1.0.1 - 2024-11-dd
+## 1.0.1 - 2024-11-06
 
 ### Fixed
 - Ensure credentials that only use the VC v2 context match status type checks.
