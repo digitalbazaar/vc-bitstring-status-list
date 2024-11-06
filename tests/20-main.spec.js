@@ -347,7 +347,7 @@ describe('statusTypeMatches', () => {
     let err;
     let result;
     try {
-      delete credential['@context'][1];
+      credential['@context'] = ['https://www.w3.org/2018/credentials/v1'];
       credential.credentialStatus = {
         id: 'https://example.com/status/1#50000',
         type: 'BitstringStatusListEntry',
