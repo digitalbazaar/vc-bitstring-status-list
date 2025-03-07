@@ -1,6 +1,6 @@
 {
   "name": "@digitalbazaar/vc-bitstring-status-list",
-  "version": "2.0.1-0",
+  "version": "2.0.1",
   "description": "Verifiable Credentials Bitstring Status List",
   "license": "BSD-3-Clause",
   "type": "module",
