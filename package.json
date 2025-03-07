@@ -19,9 +19,9 @@
   },
   "dependencies": {
     "@digitalbazaar/bitstring": "^3.1.0",
-    "@digitalbazaar/credentials-context": "^3.1.0",
-    "@digitalbazaar/vc": "^7.0.0",
-    "@digitalbazaar/vc-bitstring-status-list-context": "^1.0.0"
+    "@digitalbazaar/credentials-context": "^3.2.0",
+    "@digitalbazaar/vc": "^7.1.1",
+    "@digitalbazaar/vc-bitstring-status-list-context": "^1.1.0"
   },
   "devDependencies": {
     "@digitalbazaar/did-method-key": "^4.0.0",
