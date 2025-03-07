@@ -10,7 +10,7 @@ import {
   createCredential,
   VC_BSL_VC_V1_CONTEXT,
   VC_BSL_VC_V2_CONTEXT
-} from '@digitalbazaar/vc-bitstring-status-last';
+} from '@digitalbazaar/vc-bitstring-status-list';
 import {documentLoader} from './path-to/document-loader.js';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {Ed25519VerificationKey2020} from
@@ -28,7 +28,7 @@ const suite = new Ed25519Signature2020({key});
 
 // Status List Details
 const id = 'https://example.com/credentials/status/3';
-const list = BitstringStatusList({length: 100000});
+const list = new BitstringStatusList({length: 100000});
 const statusPurpose = 'revocation';
 
 // Create BitstringStatusListCredential
