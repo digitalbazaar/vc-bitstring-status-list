@@ -1,5 +1,13 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
+## 2.0.1 - 2025-03-xx
+
+### Changed
+- Update dependencies.
+  - `@digitalbazaar/credentials-context@3.2.0`.
+  - `@digitalbazaar/vc@7.1.1`.
+  - `@digitalbazaar/vc-bitstring-status-list-context@1.1.0`.
+
 ## 2.0.0 - 2024-11-06
 
 ### Changed
