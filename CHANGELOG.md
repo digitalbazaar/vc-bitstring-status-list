@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-bitstring-status-list ChangeLog
 
-## 2.0.1 - 2025-03-xx
+## 2.0.1 - 2025-03-07
 
 ### Changed
 - Update dependencies.
